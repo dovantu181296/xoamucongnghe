@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { AiAdvisor, CartDrawer, type CartLine } from "@/components/ShopExtras";
+import { CartDrawer, type CartLine } from "@/components/ShopExtras";
 import { Button } from "@/components/ui/button";
 import { categories, type Category, type Product } from "@/lib/catalog";
 import { ShoppingCart } from "lucide-react";
@@ -35,9 +35,9 @@ const faqs = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "KHO AI Studio | Công cụ AI cho người bán hàng" },
+      { title: "Tú Matrix AI | Công cụ AI cho người bán hàng" },
       { name: "description", content: "Khám phá công cụ, kỹ năng và lộ trình AI giúp bạn tạo ảnh, video và website bán hàng." },
-      { property: "og:title", content: "KHO AI Studio | Công cụ AI cho người bán hàng" },
+      { property: "og:title", content: "Tú Matrix AI | Công cụ AI cho người bán hàng" },
       { property: "og:description", content: "Công cụ, kỹ năng và lộ trình AI dành cho người bán hàng hiện đại." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -51,6 +51,7 @@ function Storefront() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [zaloOpen, setZaloOpen] = useState(true);
   useEffect(() => { try { setLines(JSON.parse(localStorage.getItem("kho-cart") || "[]")); } catch { /* ignore */ } }, []);
   const saveLines = (l: CartLine[]) => { setLines(l); localStorage.setItem("kho-cart", JSON.stringify(l)); };
   const add = (title: string) => { const ex = lines.find((l) => l.title === title); saveLines(ex ? lines.map((l) => (l.title === title ? { ...l, qty: l.qty + 1 } : l)) : [...lines, { title, qty: 1 }]); setCartOpen(true); };
@@ -67,11 +68,11 @@ function Storefront() {
     <AddCtx.Provider value={add}><main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/70 bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
-          <a href="#top" className="flex items-center gap-3" aria-label="KHO AI Studio">
+          <a href="#top" className="flex items-center gap-3" aria-label="Tú Matrix AI">
             <span className="grid size-10 place-items-center rounded-md bg-primary text-primary-foreground"><Bot className="size-5" /></span>
-            <span><strong className="block font-display text-lg">KHO AI STUDIO</strong><span className="hidden text-xs text-muted-foreground sm:block">Bán hàng thông minh cùng AI</span></span>
+            <span><strong className="block font-display text-lg">Tú Matrix AI</strong><span className="hidden text-xs text-muted-foreground sm:block">Bán hàng thông minh cùng AI</span></span>
           </a>
-          <div className="flex gap-2"><Button asChild size="sm" variant="outline"><a href="#tu-van-ai">Tư vấn AI</a></Button><Button size="sm" onClick={() => setCartOpen(true)} aria-label="Giỏ hàng"><ShoppingCart className="size-4" />{count}</Button></div>
+          <Button size="sm" onClick={() => setCartOpen(true)} aria-label="Giỏ hàng"><ShoppingCart className="size-4" />{count}</Button>
         </div>
       </header>
 
@@ -91,8 +92,6 @@ function Storefront() {
           </div>
         </div>
       </section>
-
-      <AiAdvisor onAdd={add} />
 
       {filtered.length ? filtered.map((category) => <ProductSection key={category.id} category={category} />) : <div className="mx-auto max-w-7xl px-5 py-24 text-center"><Search className="mx-auto mb-4 size-10 text-muted-foreground" /><h2 className="text-2xl font-bold">Không tìm thấy sản phẩm</h2><p className="mt-2 text-muted-foreground">Hãy thử một từ khóa ngắn hơn.</p></div>}
 
@@ -114,15 +113,47 @@ function Storefront() {
 
       <footer id="lien-he" className="border-t border-border bg-secondary/55">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-          <div className="sm:col-span-2 lg:col-span-1"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-md bg-primary text-primary-foreground"><Sparkles className="size-5" /></span><strong>KHO AI STUDIO</strong></div><p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">Bộ công cụ, kỹ năng và lộ trình thực hành AI dành cho người bán hàng và nhà sáng tạo.</p></div>
+          <div className="sm:col-span-2 lg:col-span-1"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-md bg-primary text-primary-foreground"><Sparkles className="size-5" /></span><strong>Tú Matrix AI</strong></div><p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">Bộ công cụ, kỹ năng và lộ trình thực hành AI dành cho người bán hàng và nhà sáng tạo.</p></div>
           <FooterGroup title="Danh mục" links={categories.map((item) => [item.label, `#${item.id}`])} />
           <FooterGroup title="Khám phá" links={[["Tất cả sản phẩm", "#san-pham"], ["Phản hồi", "#lien-he"], ["Hỏi đáp", "#lien-he"]]} />
           <div><h3 className="font-bold">Cần tư vấn?</h3><p className="mt-4 text-sm leading-6 text-muted-foreground">Gửi câu hỏi để được gợi ý sản phẩm phù hợp với mục tiêu của bạn.</p><Button className="mt-5" variant="coral"><MessageCircle className="size-4" />Nhắn tư vấn</Button></div>
         </div>
-        <div className="border-t border-border py-5 text-center text-xs text-muted-foreground">© 2026 KHO AI Studio. Nội dung và giá đang dùng để minh họa.</div>
+        <div className="border-t border-border py-5 text-center text-xs text-muted-foreground">© 2026 Tú Matrix AI. Nội dung và giá đang dùng để minh họa.</div>
       </footer>
 
-      <Button asChild size="icon" className="fixed bottom-5 right-5 z-40 size-14 rounded-full shadow-lg"><a href="#lien-he" aria-label="Liên hệ tư vấn"><MessageCircle className="size-6" /></a></Button>
+      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+        {zaloOpen && (
+          <div className="w-72 rounded-xl border border-border bg-card p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <strong className="block text-lg">Liên hệ Zalo</strong>
+                <a className="mt-1 block font-bold text-primary hover:underline" href="tel:0396662196">0396662196</a>
+              </div>
+              <button className="text-xl leading-none text-muted-foreground hover:text-foreground" type="button" aria-label="Đóng thông tin Zalo" onClick={() => setZaloOpen(false)}>×</button>
+            </div>
+            <a href="https://zalo.me/g/gwr4bcvhndptqerbyw6u" target="_blank" rel="noreferrer" className="mt-4 block rounded-lg border border-border bg-white p-2" aria-label="Mở nhóm Zalo Tú Matrix AI">
+              <img src="/zalo-tu-matrix-ai-qr.png" alt="Mã QR tham gia nhóm Zalo Tú Matrix AI" width={360} height={360} className="h-auto w-full" />
+            </a>
+            <p className="mt-2 text-center text-xs text-muted-foreground">Quét QR hoặc bấm vào mã để mở Zalo</p>
+            <Button asChild className="mt-4 w-full">
+              <a href="https://zalo.me/0396662196" target="_blank" rel="noreferrer"><MessageCircle className="size-4" />Nhắn qua Zalo</a>
+            </Button>
+            <Button asChild variant="outline" className="mt-2 w-full">
+              <a href="https://zalo.me/g/gwr4bcvhndptqerbyw6u" target="_blank" rel="noreferrer"><MessageCircle className="size-4" />Nhóm Tú Matrix AI</a>
+            </Button>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <Button asChild size="icon" className="size-16 rounded-full bg-black text-white shadow-lg hover:bg-zinc-800">
+            <a href="https://www.tiktok.com/@xoamucongnghe.ai" target="_blank" rel="noreferrer" aria-label="Theo dõi TikTok Xóa Mù Công Nghệ AI" title="TikTok @xoamucongnghe.ai">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 fill-current"><path d="M19.32 6.42a5.05 5.05 0 0 1-3.6-1.5A5.06 5.06 0 0 1 14.24 1.3h-3.17v13.14a2.72 2.72 0 1 1-2.72-2.72c.27 0 .53.04.78.11V8.6a6 6 0 1 0 5.11 5.93V8.18a8.2 8.2 0 0 0 5.08 1.75V6.42Z" /></svg>
+            </a>
+          </Button>
+          <Button type="button" size="icon" className="size-16 rounded-full bg-[#0068ff] text-white shadow-lg hover:bg-[#0054cc]" aria-label="Hiển thị thông tin Zalo" aria-expanded={zaloOpen} onClick={() => setZaloOpen((open) => !open)}>
+            <span className="text-sm font-extrabold">Zalo</span>
+          </Button>
+        </div>
+      </div>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} lines={lines} setLines={saveLines} />
     </main></AddCtx.Provider>
   );

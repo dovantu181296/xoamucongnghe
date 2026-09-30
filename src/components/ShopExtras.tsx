@@ -80,13 +80,23 @@ export function CartDrawer({ open, onClose, lines, setLines }: { open: boolean; 
                 );
               }) : (
                 <form id="checkout" onSubmit={submit} className="space-y-4">
+                  {total > 0 && (
+                    <div className="rounded-xl border-2 border-primary bg-secondary/45 p-4 text-center">
+                      <h3 className="font-display text-lg font-extrabold">Quét QR để thanh toán</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">MB Bank · Chủ tài khoản Đỗ Văn Tú</p>
+                      <p className="mt-1 text-sm font-bold">Số tài khoản: 5410145678999</p>
+                      <img src="/qr-thanh-toan-mb-do-van-tu.jpg" alt="Mã QR thanh toán MB Bank của Đỗ Văn Tú" width={1080} height={1175} className="mx-auto mt-4 h-auto w-full max-w-xs rounded-lg border border-border bg-white" />
+                      <p className="mt-3 text-sm">Số tiền cần chuyển: <strong className="text-action">{formatVnd(total)}</strong></p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Sau khi chuyển khoản, vui lòng điền thông tin bên dưới và bấm “Xác nhận đặt hàng”.</p>
+                    </div>
+                  )}
                   {([["name", "Họ và tên", "text"], ["email", "Email nhận sản phẩm", "email"], ["phone", "Số điện thoại", "tel"]] as const).map(([k, label, type]) => (
                     <label key={k} className="block text-sm font-semibold">{label}
                       <input type={type} className={`${field} mt-1.5`} value={form[k]} maxLength={255} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
                       {errors[k] && <span className="mt-1 block text-xs text-destructive">{errors[k]}</span>}
                     </label>
                   ))}
-                  <p className="rounded-md bg-secondary p-3 text-xs leading-5 text-muted-foreground">Đây là bản minh họa: đơn hàng được ghi nhận nhưng chưa trừ tiền thật.</p>
+                  {total === 0 && <p className="rounded-md bg-secondary p-3 text-xs leading-5 text-muted-foreground">Sản phẩm này miễn phí. Hãy điền thông tin để nhận sản phẩm.</p>}
                 </form>
               )}
             </div>
