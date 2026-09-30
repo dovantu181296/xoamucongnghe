@@ -16,7 +16,13 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { AiAdvisor, CartDrawer, type CartLine } from "@/components/ShopExtras";
 import { Button } from "@/components/ui/button";
+import { categories, type Category, type Product } from "@/lib/catalog";
+import { ShoppingCart } from "lucide-react";
+import { createContext, useContext, useEffect } from "react";
+
+const AddCtx = createContext<(title: string) => void>(() => {});
 
 const faqs = [
   ["Tôi cần chuẩn bị gì để bắt đầu?", "Bạn chỉ cần ảnh sản phẩm rõ nét và mục tiêu nội dung. Mỗi sản phẩm đều có hướng dẫn từng bước để bắt đầu."],
@@ -43,6 +49,12 @@ export const Route = createFileRoute("/")({
 function Storefront() {
   const [query, setQuery] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [lines, setLines] = useState<CartLine[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  useEffect(() => { try { setLines(JSON.parse(localStorage.getItem("kho-cart") || "[]")); } catch { /* ignore */ } }, []);
+  const saveLines = (l: CartLine[]) => { setLines(l); localStorage.setItem("kho-cart", JSON.stringify(l)); };
+  const add = (title: string) => { const ex = lines.find((l) => l.title === title); saveLines(ex ? lines.map((l) => (l.title === title ? { ...l, qty: l.qty + 1 } : l)) : [...lines, { title, qty: 1 }]); setCartOpen(true); };
+  const count = lines.reduce((n, l) => n + l.qty, 0);
   const filtered = useMemo(() => {
     const term = query.trim().toLocaleLowerCase("vi");
     if (!term) return categories;
@@ -52,14 +64,14 @@ function Storefront() {
   }, [query]);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
+    <AddCtx.Provider value={add}><main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/70 bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <a href="#top" className="flex items-center gap-3" aria-label="KHO AI Studio">
             <span className="grid size-10 place-items-center rounded-md bg-primary text-primary-foreground"><Bot className="size-5" /></span>
             <span><strong className="block font-display text-lg">KHO AI STUDIO</strong><span className="hidden text-xs text-muted-foreground sm:block">Bán hàng thông minh cùng AI</span></span>
           </a>
-          <Button asChild size="sm"><a href="#lien-he"><MessageCircle className="size-4" />Tư vấn</a></Button>
+          <div className="flex gap-2"><Button asChild size="sm" variant="outline"><a href="#tu-van-ai">Tư vấn AI</a></Button><Button size="sm" onClick={() => setCartOpen(true)} aria-label="Giỏ hàng"><ShoppingCart className="size-4" />{count}</Button></div>
         </div>
       </header>
 
@@ -79,6 +91,8 @@ function Storefront() {
           </div>
         </div>
       </section>
+
+      <AiAdvisor onAdd={add} />
 
       {filtered.length ? filtered.map((category) => <ProductSection key={category.id} category={category} />) : <div className="mx-auto max-w-7xl px-5 py-24 text-center"><Search className="mx-auto mb-4 size-10 text-muted-foreground" /><h2 className="text-2xl font-bold">Không tìm thấy sản phẩm</h2><p className="mt-2 text-muted-foreground">Hãy thử một từ khóa ngắn hơn.</p></div>}
 
@@ -109,7 +123,8 @@ function Storefront() {
       </footer>
 
       <Button asChild size="icon" className="fixed bottom-5 right-5 z-40 size-14 rounded-full shadow-lg"><a href="#lien-he" aria-label="Liên hệ tư vấn"><MessageCircle className="size-6" /></a></Button>
-    </main>
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} lines={lines} setLines={saveLines} />
+    </main></AddCtx.Provider>
   );
 }
 
@@ -118,7 +133,8 @@ function ProductSection({ category }: { category: Category }) {
 }
 
 function ProductCard({ product }: { product: Product }) {
-  return <article className="group flex min-w-0 flex-col overflow-hidden rounded-lg border-2 border-primary bg-card transition-transform hover:-translate-y-1"><div className="relative aspect-[4/5] overflow-hidden bg-muted"><img src={product.image} alt={product.title} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />{product.badge && <span className="absolute right-3 top-3 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">{product.badge}</span>} {product.title.toLocaleLowerCase("vi").includes("video") && <span className="absolute left-1/2 top-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-primary/90 text-primary-foreground"><Play className="ml-1 size-6 fill-current" /></span>}</div><div className="flex flex-1 flex-col p-5"><h3 className="text-lg font-extrabold leading-snug text-primary">{product.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{product.description}</p><div className="mt-5 flex min-h-12 items-end justify-between gap-3">{product.free ? <strong className="text-success">Miễn phí</strong> : <div>{product.oldPrice && <span className="block text-xs text-muted-foreground line-through">{product.oldPrice}</span>}<strong className="text-xl text-action">{product.price}</strong></div>}<Button asChild variant={product.free ? "default" : "coral"} size="sm"><a href="#lien-he">{product.free ? "Nhận quà" : "Chi tiết"}</a></Button></div></div></article>;
+  const add = useContext(AddCtx);
+  return <article className="group flex min-w-0 flex-col overflow-hidden rounded-lg border-2 border-primary bg-card transition-transform hover:-translate-y-1"><div className="relative aspect-[4/5] overflow-hidden bg-muted"><img src={product.image} alt={product.title} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />{product.badge && <span className="absolute right-3 top-3 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">{product.badge}</span>} {product.title.toLocaleLowerCase("vi").includes("video") && <span className="absolute left-1/2 top-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-primary/90 text-primary-foreground"><Play className="ml-1 size-6 fill-current" /></span>}</div><div className="flex flex-1 flex-col p-5"><h3 className="text-lg font-extrabold leading-snug text-primary">{product.title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{product.description}</p><div className="mt-5 flex min-h-12 items-end justify-between gap-3">{product.free ? <strong className="text-success">Miễn phí</strong> : <div>{product.oldPrice && <span className="block text-xs text-muted-foreground line-through">{product.oldPrice}</span>}<strong className="text-xl text-action">{product.price}</strong></div>}<Button variant={product.free ? "default" : "coral"} size="sm" onClick={() => add(product.title)}>{product.free ? "Nhận quà" : "Thêm vào giỏ"}</Button></div></div></article>;
 }
 
 function FooterGroup({ title, links }: { title: string; links: string[][] }) {
