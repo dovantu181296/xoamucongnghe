@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { recommendProducts, type Recommendation } from "@/lib/advisor.functions";
 import { allProducts, formatVnd, priceValue, type Product } from "@/lib/catalog";
+import { createVideoAiCheckout } from "@/lib/payment.functions";
 
 export type CartLine = { title: string; qty: number };
 
@@ -38,6 +39,8 @@ export function CartDrawer({
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [orderId, setOrderId] = useState("");
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const total = lines.reduce(
     (sum, l) => sum + priceValue(findProduct(l.title) as Product) * l.qty,
     0,
@@ -55,7 +58,7 @@ export function CartDrawer({
     onClose();
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = checkoutSchema.safeParse(form);
     if (!r.success) {
@@ -63,6 +66,32 @@ export function CartDrawer({
       return;
     }
     setErrors({});
+    setPaymentError("");
+    const automaticPayment =
+      lines.length === 1 && lines[0].title === "Video AI đa ngành" && total > 0;
+    if (automaticPayment) {
+      setPaymentLoading(true);
+      try {
+        const checkout = await createVideoAiCheckout({ data: { ...r.data, qty: lines[0].qty } });
+        const paymentForm = document.createElement("form");
+        paymentForm.method = "POST";
+        paymentForm.action = checkout.action;
+        for (const [name, value] of Object.entries(checkout.fields)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = value;
+          paymentForm.appendChild(input);
+        }
+        document.body.appendChild(paymentForm);
+        paymentForm.submit();
+        return;
+      } catch {
+        setPaymentError("Cổng thanh toán chưa được cấu hình. Vui lòng thử lại sau.");
+        setPaymentLoading(false);
+        return;
+      }
+    }
     setOrderId(`KHO${Date.now().toString().slice(-6)}`);
     setLines([]);
     setStep("done");
@@ -209,6 +238,17 @@ export function CartDrawer({
                       Sản phẩm này miễn phí. Hãy điền thông tin để nhận sản phẩm.
                     </p>
                   )}
+                  {lines.length === 1 && lines[0].title === "Video AI đa ngành" && (
+                    <p className="rounded-md bg-success/10 p-3 text-xs font-semibold leading-5 text-success">
+                      SePay sẽ tự động xác minh giao dịch. Link sản phẩm chỉ hiển thị sau khi ngân
+                      hàng báo thanh toán thành công.
+                    </p>
+                  )}
+                  {paymentError && (
+                    <p className="rounded-md bg-destructive/10 p-3 text-xs text-destructive">
+                      {paymentError}
+                    </p>
+                  )}
                 </form>
               )}
             </div>
@@ -226,8 +266,22 @@ export function CartDrawer({
                   <Button variant="outline" onClick={() => setStep("cart")}>
                     Quay lại
                   </Button>
-                  <Button className="flex-1" variant="coral" type="submit" form="checkout">
-                    Xác nhận đặt hàng
+                  <Button
+                    className="flex-1"
+                    variant="coral"
+                    type="submit"
+                    form="checkout"
+                    disabled={paymentLoading}
+                  >
+                    {paymentLoading ? (
+                      <>
+                        <Loader2 className="mr-2 size-4 animate-spin" /> Đang mở SePay...
+                      </>
+                    ) : lines.length === 1 && lines[0].title === "Video AI đa ngành" ? (
+                      "Thanh toán qua SePay"
+                    ) : (
+                      "Xác nhận đặt hàng"
+                    )}
                   </Button>
                 </div>
               )}
