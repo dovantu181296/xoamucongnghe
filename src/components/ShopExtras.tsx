@@ -72,7 +72,9 @@ export function CartDrawer({
     if (automaticPayment) {
       setPaymentLoading(true);
       try {
-        const checkout = await createVideoAiCheckout({ data: { ...r.data, qty: lines[0]?.qty ?? 1 } });
+        const checkout = await createVideoAiCheckout({
+          data: { ...r.data, qty: lines[0]?.qty ?? 1 },
+        });
         const paymentForm = document.createElement("form");
         paymentForm.method = "POST";
         paymentForm.action = checkout.action;
