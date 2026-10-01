@@ -68,11 +68,11 @@ export function CartDrawer({
     setErrors({});
     setPaymentError("");
     const automaticPayment =
-      lines.length === 1 && lines[0].title === "Video AI đa ngành" && total > 0;
+      lines.length === 1 && lines[0]?.title === "Video AI đa ngành" && total > 0;
     if (automaticPayment) {
       setPaymentLoading(true);
       try {
-        const checkout = await createVideoAiCheckout({ data: { ...r.data, qty: lines[0].qty } });
+        const checkout = await createVideoAiCheckout({ data: { ...r.data, qty: lines[0]?.qty ?? 1 } });
         const paymentForm = document.createElement("form");
         paymentForm.method = "POST";
         paymentForm.action = checkout.action;
@@ -238,7 +238,7 @@ export function CartDrawer({
                       Sản phẩm này miễn phí. Hãy điền thông tin để nhận sản phẩm.
                     </p>
                   )}
-                  {lines.length === 1 && lines[0].title === "Video AI đa ngành" && (
+                  {lines.length === 1 && lines[0]?.title === "Video AI đa ngành" && (
                     <p className="rounded-md bg-success/10 p-3 text-xs font-semibold leading-5 text-success">
                       SePay sẽ tự động xác minh giao dịch. Link sản phẩm chỉ hiển thị sau khi ngân
                       hàng báo thanh toán thành công.
@@ -277,7 +277,7 @@ export function CartDrawer({
                       <>
                         <Loader2 className="mr-2 size-4 animate-spin" /> Đang mở SePay...
                       </>
-                    ) : lines.length === 1 && lines[0].title === "Video AI đa ngành" ? (
+                    ) : lines.length === 1 && lines[0]?.title === "Video AI đa ngành" ? (
                       "Thanh toán qua SePay"
                     ) : (
                       "Xác nhận đặt hàng"
